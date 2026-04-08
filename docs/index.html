@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="가격추적">
 <title>경쟁사 가격 추적</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <style>
 :root {
   --bg: #0f0f0f; --bg2: #1a1a1a; --bg3: #242424;
@@ -136,6 +137,10 @@ th.pivot-hdr-name { position: sticky; left: 0; z-index: 2; background: #111; tex
 .nav-btn.active { color: var(--blue); }
 .nav-icon { font-size: 20px; line-height: 1; }
 
+/* ── 엑셀 버튼 ── */
+.excel-btn-top { color: #81c784 !important; margin-left: auto; }
+.excel-btn-top:hover { color: #a5d6a7 !important; }
+
 /* ── 데스크톱 ── */
 @media (min-width: 640px) {
   body { padding-bottom: 0; }
@@ -162,7 +167,7 @@ th.pivot-hdr-name { position: sticky; left: 0; z-index: 2; background: #111; tex
 <div class="header">
   <div>
     <div class="header-title">경쟁사 가격 추적</div>
-    <div class="header-sub">회산디지털 스마트스토어 · 2026-04-08 11:42 기준</div>
+    <div class="header-sub">회산디지털 스마트스토어 · 2026-04-08 11:52 기준</div>
   </div>
 </div>
 
@@ -191,6 +196,7 @@ th.pivot-hdr-name { position: sticky; left: 0; z-index: 2; background: #111; tex
   <div class="tab-top active" onclick="switchTab('current', this)">현재 가격</div>
   <div class="tab-top" onclick="switchTab('pivot', this)">날짜별 최저가</div>
   <div class="tab-top" onclick="switchTab('charts', this)">가격 추이</div>
+  <div class="tab-top excel-btn-top" onclick="downloadExcel()">⬇ 엑셀 다운로드</div>
 </div>
 
 <!-- 현재 가격 -->
@@ -693,9 +699,56 @@ th.pivot-hdr-name { position: sticky; left: 0; z-index: 2; background: #111; tex
   <button class="nav-btn" onclick="switchTab('charts', this)" data-tab="charts">
     <span class="nav-icon">📈</span><span>추이</span>
   </button>
+  <button class="nav-btn" onclick="downloadExcel()">
+    <span class="nav-icon">⬇</span><span>엑셀</span>
+  </button>
 </nav>
 
 <script>
+var CURRENT = [{"name": "WD90F25CHY", "sale": "3,499,000원", "my_price": "3,039,000원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WD80F25CHY", "sale": "2,999,000원", "my_price": "2,554,100원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WD90H25BHY", "sale": "4,099,000원", "my_price": "3,789,000원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WD80H25BHB", "sale": "3,299,000원", "my_price": "2,989,000원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WH80H2420BBHS", "sale": "3,549,000원", "my_price": "3,239,000원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WH80H2420BBHY", "sale": "3,549,000원", "my_price": "3,239,000원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WF2522HDEEE", "sale": "2,899,000원", "my_price": "2,464,100원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WF2520HCEED", "sale": "2,569,000원", "my_price": "2,167,100원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WF21DG6650BV+DV21DG8600BV", "sale": "2,209,000원", "my_price": "1,888,100원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WF21DG6650BW+DV21DG8600BW", "sale": "2,249,000원", "my_price": "1,924,100원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WF21DG6650BV", "sale": "1,069,000원", "my_price": "871,100원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WF21DG6650BW", "sale": "1,069,000원", "my_price": "871,100원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "DV21DG8600BV", "sale": "1,227,000원", "my_price": "1,040,300원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "DV21DG8600BW", "sale": "1,227,000원", "my_price": "1,040,300원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WD90H25BHB", "sale": "4,299,000원", "my_price": "4,289,000원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WD80H25BHY", "sale": "3,499,000원", "my_price": "3,489,000원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WF80H2422BDHW", "sale": "3,759,000원", "my_price": "3,749,000원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WF80H2420BDHS", "sale": "3,209,000원", "my_price": "3,199,000원", "change": "신규", "ts": "2026-04-08 10:46"}, {"name": "WF80H2420BDHW", "sale": "3,209,000원", "my_price": "3,199,000원", "change": "신규", "ts": "2026-04-08 10:47"}, {"name": "WF80H24BDW", "sale": "1,759,000원", "my_price": "1,749,000원", "change": "신규", "ts": "2026-04-08 10:47"}, {"name": "WF80H24BDS", "sale": "1,799,000원", "my_price": "1,789,000원", "change": "신규", "ts": "2026-04-08 10:47"}, {"name": "DV80H22DDW", "sale": "2,039,000원", "my_price": "2,029,000원", "change": "신규", "ts": "2026-04-08 10:47"}, {"name": "DV80H20DDS", "sale": "1,949,000원", "my_price": "1,939,000원", "change": "신규", "ts": "2026-04-08 10:47"}, {"name": "DV80H20DDW", "sale": "1,909,000원", "my_price": "1,899,000원", "change": "신규", "ts": "2026-04-08 10:47"}, {"name": "WF80H2422ACHS", "sale": "3,299,000원", "my_price": "3,289,000원", "change": "신규", "ts": "2026-04-08 10:47"}, {"name": "WF80H24ADS", "sale": "1,749,000원", "my_price": "1,739,000원", "change": "신규", "ts": "2026-04-08 10:47"}, {"name": "DV80H22CDS", "sale": "1,969,000원", "my_price": "1,959,000원", "change": "신규", "ts": "2026-04-08 10:47"}];
+var PIVOT_DATES = ["2026-04-08"];
+var PIVOT_ROWS  = [{"name": "WD90F25CHY", "values": {"2026-04-08": 3039000}}, {"name": "WD80F25CHY", "values": {"2026-04-08": 2554100}}, {"name": "WD90H25BHY", "values": {"2026-04-08": 3789000}}, {"name": "WD80H25BHB", "values": {"2026-04-08": 2989000}}, {"name": "WH80H2420BBHS", "values": {"2026-04-08": 3239000}}, {"name": "WH80H2420BBHY", "values": {"2026-04-08": 3239000}}, {"name": "WF2522HDEEE", "values": {"2026-04-08": 2464100}}, {"name": "WF2520HCEED", "values": {"2026-04-08": 2167100}}, {"name": "WF21DG6650BV+DV21DG8600BV", "values": {"2026-04-08": 1888100}}, {"name": "WF21DG6650BW+DV21DG8600BW", "values": {"2026-04-08": 1924100}}, {"name": "WF21DG6650BV", "values": {"2026-04-08": 871100}}, {"name": "WF21DG6650BW", "values": {"2026-04-08": 871100}}, {"name": "DV21DG8600BV", "values": {"2026-04-08": 1040300}}, {"name": "DV21DG8600BW", "values": {"2026-04-08": 1040300}}, {"name": "WD90H25BHB", "values": {"2026-04-08": 4289000}}, {"name": "WD80H25BHY", "values": {"2026-04-08": 3489000}}, {"name": "WF80H2422BDHW", "values": {"2026-04-08": 3749000}}, {"name": "WF80H2420BDHS", "values": {"2026-04-08": 3199000}}, {"name": "WF80H2420BDHW", "values": {"2026-04-08": 3199000}}, {"name": "WF80H24BDW", "values": {"2026-04-08": 1749000}}, {"name": "WF80H24BDS", "values": {"2026-04-08": 1789000}}, {"name": "DV80H22DDW", "values": {"2026-04-08": 2029000}}, {"name": "DV80H20DDS", "values": {"2026-04-08": 1939000}}, {"name": "DV80H20DDW", "values": {"2026-04-08": 1899000}}, {"name": "WF80H2422ACHS", "values": {"2026-04-08": 3289000}}, {"name": "WF80H24ADS", "values": {"2026-04-08": 1739000}}, {"name": "DV80H22CDS", "values": {"2026-04-08": 1959000}}];
+
+function downloadExcel() {
+  if (typeof XLSX === 'undefined') {
+    alert('엑셀 라이브러리 로딩 중입니다. 잠시 후 다시 시도하세요.');
+    return;
+  }
+  var wb = XLSX.utils.book_new();
+
+  // ── 현재 가격 시트 ──
+  var ws1_data = [['상품명','판매가','나의 할인가','전회차 변동','확인 시각']];
+  CURRENT.forEach(function(r) {
+    ws1_data.push([r.name, r.sale, r.my_price, r.change, r.ts]);
+  });
+  var ws1 = XLSX.utils.aoa_to_sheet(ws1_data);
+  ws1['!cols'] = [{wch:22},{wch:14},{wch:14},{wch:14},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, ws1, '현재 가격');
+
+  // ── 날짜별 최저가 시트 ──
+  var hdr = ['상품명'].concat(PIVOT_DATES);
+  var ws2_data = [hdr];
+  PIVOT_ROWS.forEach(function(r) {
+    var row = [r.name];
+    PIVOT_DATES.forEach(function(d) {
+      var v = r.values[d];
+      row.push(v != null ? v : '—');
+    });
+    ws2_data.push(row);
+  });
+  var ws2 = XLSX.utils.aoa_to_sheet(ws2_data);
+  var cols2 = [{wch:22}];
+  PIVOT_DATES.forEach(function() { cols2.push({wch:13}); });
+  ws2['!cols'] = cols2;
+  XLSX.utils.book_append_sheet(wb, ws2, '날짜별 최저가');
+
+  var now = new Date();
+  var ts  = now.getFullYear() + ('0'+(now.getMonth()+1)).slice(-2) +
+            ('0'+now.getDate()).slice(-2) + '_' +
+            ('0'+now.getHours()).slice(-2) + ('0'+now.getMinutes()).slice(-2);
+  XLSX.writeFile(wb, '경쟁사가격_' + ts + '.xlsx');
+}
+
 function switchTab(name, el) {
   document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
   document.getElementById('tab-' + name).classList.add('active');
