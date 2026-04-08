@@ -1,0 +1,21 @@
+# 민감 데이터 — GitHub에 올라가지 않음
+products.json
+price_history.json
+auto_check.log
+
+# Chrome 프로필 (로그인 세션)
+chrome_profile/
+
+# 스크린샷
+screenshots/
+
+# 로컬 대시보드 미리보기
+dashboard.html
+
+# Python 캐시
+__pycache__/
+*.pyc
+*.pyo
+
+# 엑셀 파일
+*.xlsx

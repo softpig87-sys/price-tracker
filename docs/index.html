@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1558b0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="가격추적">
+<title>경쟁사 가격 추적</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --bg: #0f0f0f; --bg2: #1a1a1a; --bg3: #242424;
+  --border: #2e2e2e; --text: #e8e8e8; --muted: #666;
+  --blue: #4fc3f7; --green: #81c784; --red: #ef5350; --yellow: #ffca28;
+  --nav-h: 60px; --header-h: 56px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: -apple-system, 'Malgun Gothic', sans-serif;
+  font-size: 14px; line-height: 1.5;
+  height: 100%; overflow-x: hidden;
+  padding-bottom: calc(var(--nav-h) + var(--safe-b));
+}
+a { color: inherit; text-decoration: none; }
+
+/* ── 헤더 ── */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: #1558b0;
+  padding: 0 16px;
+  height: var(--header-h);
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.header-title { font-size: 15px; font-weight: 700; color: #fff; }
+.header-sub { font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 1px; }
+
+/* ── 통계 바 ── */
+.stat-bar {
+  display: flex; gap: 0; background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+}
+.stat {
+  flex: 1; padding: 10px 8px; text-align: center;
+  border-right: 1px solid var(--border);
+}
+.stat:last-child { border-right: none; }
+.stat-val { font-size: 18px; font-weight: 700; line-height: 1; }
+.stat-label { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+/* ── 탭 콘텐츠 ── */
+.tab-content { display: none; padding: 12px; }
+.tab-content.active { display: block; }
+
+/* ── 카드 목록 ── */
+.card-list { display: flex; flex-direction: column; gap: 10px; }
+.card {
+  display: block;
+  background: var(--bg2); border-radius: 12px;
+  padding: 14px 16px; border: 1px solid var(--border);
+  transition: background 0.15s;
+  -webkit-user-select: none; user-select: none;
+}
+.card:active { background: var(--bg3); }
+.card-top {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 8px; margin-bottom: 10px;
+}
+.card-name { font-size: 15px; font-weight: 700; color: var(--text); flex: 1; }
+.badge {
+  font-size: 12px; font-weight: 700; padding: 3px 8px;
+  border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+}
+.badge.down  { background: rgba(129,199,132,0.15); color: var(--green); }
+.badge.up    { background: rgba(239,83,80,0.15);   color: var(--red); }
+.badge.same  { background: rgba(255,255,255,0.07); color: var(--muted); }
+.badge.new   { background: rgba(255,202,40,0.15);  color: var(--yellow); }
+.card-prices { display: flex; flex-direction: column; gap: 5px; }
+.price-row   { display: flex; justify-content: space-between; align-items: center; }
+.price-label { font-size: 12px; color: var(--muted); }
+.price-val   { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.price-val.best { color: var(--blue); font-size: 17px; }
+.card-ts     { font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+/* ── 피벗 테이블 ── */
+.pivot-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; background: var(--bg2); }
+.pivot-note  { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+table        { border-collapse: collapse; width: 100%; }
+th {
+  background: #111; color: #888; font-size: 11px; font-weight: 600;
+  padding: 10px 10px; text-align: center; white-space: nowrap;
+  position: sticky; top: 0;
+}
+td { padding: 9px 10px; border-bottom: 1px solid var(--border); font-size: 12px;
+      text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+.pivot-name {
+  text-align: left; font-weight: 700; font-size: 12px;
+  position: sticky; left: 0; background: var(--bg2); z-index: 1;
+  min-width: 130px; max-width: 130px;
+}
+th.pivot-hdr-name { position: sticky; left: 0; z-index: 2; background: #111; text-align: left; }
+.down  { color: var(--green); font-weight: 600; }
+.up    { color: var(--red);   font-weight: 600; }
+.muted { color: var(--muted); }
+
+/* ── 차트 ── */
+.chart-list  { display: flex; flex-direction: column; gap: 10px; }
+.chart-card  { background: var(--bg2); border-radius: 12px; padding: 14px; border: 1px solid var(--border); }
+.chart-head  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.chart-name  { font-size: 14px; font-weight: 700; }
+.chart-price { font-size: 14px; font-weight: 700; }
+.chart-body  { height: 140px; }
+
+/* ── 하단 내비게이션 ── */
+.nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  height: calc(var(--nav-h) + var(--safe-b));
+  padding-bottom: var(--safe-b);
+  background: var(--bg2); border-top: 1px solid var(--border);
+  display: flex;
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px; cursor: pointer; border: none; background: none;
+  color: var(--muted); font-size: 10px; font-family: inherit;
+  padding: 0; min-height: 44px; transition: color 0.15s;
+}
+.nav-btn.active { color: var(--blue); }
+.nav-icon { font-size: 20px; line-height: 1; }
+
+/* ── 데스크톱 ── */
+@media (min-width: 640px) {
+  body { padding-bottom: 0; }
+  .nav { display: none; }
+  .tabs-top {
+    display: flex !important; background: var(--bg2);
+    border-bottom: 1px solid var(--border); padding: 0 20px;
+  }
+  .tab-top {
+    padding: 14px 22px; cursor: pointer; color: var(--muted);
+    font-size: 14px; border-bottom: 3px solid transparent;
+  }
+  .tab-top.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 700; }
+  .tab-content { padding: 20px; }
+  .card-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .chart-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 12px; }
+  .chart-body { height: 180px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="header">
+  <div>
+    <div class="header-title">경쟁사 가격 추적</div>
+    <div class="header-sub">회산디지털 스마트스토어 · 2026-04-08 11:42 기준</div>
+  </div>
+</div>
+
+<!-- 통계 바 -->
+<div class="stat-bar">
+  <div class="stat">
+    <div class="stat-val">27</div>
+    <div class="stat-label">전체 상품</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" style="color:var(--green)">0</div>
+    <div class="stat-label">가격 인하</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" style="color:var(--red)">0</div>
+    <div class="stat-label">가격 인상</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val">1</div>
+    <div class="stat-label">추적 일수</div>
+  </div>
+</div>
+
+<!-- 데스크톱 탭 (모바일에서는 숨김) -->
+<div class="tabs-top" style="display:none">
+  <div class="tab-top active" onclick="switchTab('current', this)">현재 가격</div>
+  <div class="tab-top" onclick="switchTab('pivot', this)">날짜별 최저가</div>
+  <div class="tab-top" onclick="switchTab('charts', this)">가격 추이</div>
+</div>
+
+<!-- 현재 가격 -->
+<div class="tab-content active" id="tab-current">
+  <div class="card-list">
+    
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/11514491040" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WD90F25CHY</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">3,499,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">3,039,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/11734990598" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WD80F25CHY</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">2,999,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">2,554,100원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13103990049" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WD90H25BHY</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">4,099,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">3,789,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13104010687" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WD80H25BHB</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">3,299,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">2,989,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13104019925" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WH80H2420BBHS</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">3,549,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">3,239,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13104017249" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WH80H2420BBHY</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">3,549,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">3,239,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/12274110739" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF2522HDEEE</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">2,899,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">2,464,100원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/10087195780" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF2520HCEED</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">2,569,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">2,167,100원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/11359834049" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF21DG6650BV+DV21DG8600BV</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">2,209,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">1,888,100원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/11514487439" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF21DG6650BW+DV21DG8600BW</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">2,249,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">1,924,100원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/11461447219" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF21DG6650BV</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">1,069,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">871,100원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/11514488828" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF21DG6650BW</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">1,069,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">871,100원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/11461043460" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">DV21DG8600BV</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">1,227,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">1,040,300원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/11514490160" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">DV21DG8600BW</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">1,227,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">1,040,300원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347037086" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WD90H25BHB</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">4,299,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">4,289,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347065093" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WD80H25BHY</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">3,499,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">3,489,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347495668" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF80H2422BDHW</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">3,759,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">3,749,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347324594" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF80H2420BDHS</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">3,209,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">3,199,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:46</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347480488" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF80H2420BDHW</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">3,209,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">3,199,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:47</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347580881" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF80H24BDW</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">1,759,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">1,749,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:47</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347561767" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF80H24BDS</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">1,799,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">1,789,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:47</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347738133" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">DV80H22DDW</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">2,039,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">2,029,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:47</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347686444" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">DV80H20DDS</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">1,949,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">1,939,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:47</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347711245" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">DV80H20DDW</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">1,909,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">1,899,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:47</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347506334" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF80H2422ACHS</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">3,299,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">3,289,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:47</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347648175" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">WF80H24ADS</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">1,749,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">1,739,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:47</div>
+    </a>
+    <a href="https://smartstore.naver.com/qhdmsvmfkwk/products/13347789370" target="_blank" class="card">
+      <div class="card-top">
+        <span class="card-name">DV80H22CDS</span>
+        <span class="badge new">신규</span>
+      </div>
+      <div class="card-prices">
+        <div class="price-row">
+          <span class="price-label">판매가</span>
+          <span class="price-val">1,969,000원</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label">나의 할인가</span>
+          <span class="price-val best">1,959,000원</span>
+        </div>
+      </div>
+      <div class="card-ts">2026-04-08 10:47</div>
+    </a>
+  </div>
+</div>
+
+<!-- 날짜별 최저가 -->
+<div class="tab-content" id="tab-pivot">
+  <p class="pivot-note">나의 할인가 기준 최저가 · 최근 1일 · 단위: 만원</p>
+  <div class="pivot-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th class="pivot-hdr-name">상품명</th>
+          <th>04-08</th>
+        </tr>
+      </thead>
+      <tbody><tr><td class="pivot-name">WD90F25CHY</td><td class="">303만</td></tr><tr><td class="pivot-name">WD80F25CHY</td><td class="">255만</td></tr><tr><td class="pivot-name">WD90H25BHY</td><td class="">378만</td></tr><tr><td class="pivot-name">WD80H25BHB</td><td class="">298만</td></tr><tr><td class="pivot-name">WH80H2420BBHS</td><td class="">323만</td></tr><tr><td class="pivot-name">WH80H2420BBHY</td><td class="">323만</td></tr><tr><td class="pivot-name">WF2522HDEEE</td><td class="">246만</td></tr><tr><td class="pivot-name">WF2520HCEED</td><td class="">216만</td></tr><tr><td class="pivot-name">WF21DG6650BV+DV21DG8600BV</td><td class="">188만</td></tr><tr><td class="pivot-name">WF21DG6650BW+DV21DG8600BW</td><td class="">192만</td></tr><tr><td class="pivot-name">WF21DG6650BV</td><td class="">87만</td></tr><tr><td class="pivot-name">WF21DG6650BW</td><td class="">87만</td></tr><tr><td class="pivot-name">DV21DG8600BV</td><td class="">104만</td></tr><tr><td class="pivot-name">DV21DG8600BW</td><td class="">104만</td></tr><tr><td class="pivot-name">WD90H25BHB</td><td class="">428만</td></tr><tr><td class="pivot-name">WD80H25BHY</td><td class="">348만</td></tr><tr><td class="pivot-name">WF80H2422BDHW</td><td class="">374만</td></tr><tr><td class="pivot-name">WF80H2420BDHS</td><td class="">319만</td></tr><tr><td class="pivot-name">WF80H2420BDHW</td><td class="">319만</td></tr><tr><td class="pivot-name">WF80H24BDW</td><td class="">174만</td></tr><tr><td class="pivot-name">WF80H24BDS</td><td class="">178만</td></tr><tr><td class="pivot-name">DV80H22DDW</td><td class="">202만</td></tr><tr><td class="pivot-name">DV80H20DDS</td><td class="">193만</td></tr><tr><td class="pivot-name">DV80H20DDW</td><td class="">189만</td></tr><tr><td class="pivot-name">WF80H2422ACHS</td><td class="">328만</td></tr><tr><td class="pivot-name">WF80H24ADS</td><td class="">173만</td></tr><tr><td class="pivot-name">DV80H22CDS</td><td class="">195만</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 가격 추이 -->
+<div class="tab-content" id="tab-charts">
+  <div class="chart-list">
+    
+  </div>
+</div>
+
+<!-- 하단 내비게이션 (모바일) -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="switchTab('current', this)" data-tab="current">
+    <span class="nav-icon">💰</span><span>현재 가격</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('pivot', this)" data-tab="pivot">
+    <span class="nav-icon">📅</span><span>날짜별</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('charts', this)" data-tab="charts">
+    <span class="nav-icon">📈</span><span>추이</span>
+  </button>
+</nav>
+
+<script>
+function switchTab(name, el) {
+  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('tab-' + name).classList.add('active');
+  // 하단 내비
+  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.tab-top').forEach(function(b) { b.classList.remove('active'); });
+  var btns = document.querySelectorAll('[data-tab="' + name + '"]');
+  btns.forEach(function(b) { b.classList.add('active'); });
+  if (el) el.classList.add('active');
+}
+
+</script>
+</body>
+</html>
