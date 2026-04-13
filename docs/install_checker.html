@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>설치 공간 확인 — 비스포크 AI콤보 WD80H25BHY</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    background: #ffffff;
+    padding: 0;
+    margin: 0;
+  }
+
+  .wrap {
+    max-width: 1026px;
+    margin: 0 auto;
+    padding: 28px 16px 36px;
+  }
+
+  /* 헤더 */
+  .header {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+
+  .header .eyebrow {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: #1428a0;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+
+  .header h2 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111111;
+    line-height: 1.4;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+
+  .header p {
+    font-size: 13px;
+    color: #888888;
+    line-height: 1.6;
+  }
+
+  /* 제품 스펙 */
+  .spec-card {
+    background: #f7f8fc;
+    border: 1px solid #e8eaf2;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .spec-img {
+    width: 68px;
+    height: 68px;
+    border-radius: 10px;
+    object-fit: contain;
+    background: #fff;
+    border: 1px solid #e8eaf2;
+    flex-shrink: 0;
+    padding: 4px;
+  }
+
+  .spec-img-placeholder {
+    width: 68px;
+    height: 68px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #1428a0 0%, #4a7eff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  .spec-info .model {
+    font-size: 12px;
+    font-weight: 800;
+    color: #111;
+    margin-bottom: 5px;
+    letter-spacing: -0.2px;
+  }
+
+  .spec-info .dims {
+    font-size: 11px;
+    color: #888;
+    line-height: 1.7;
+  }
+
+  .spec-info .dims strong {
+    color: #1428a0;
+    font-weight: 700;
+  }
+
+  /* 입력 섹션 */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #aaaaaa;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .input-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .input-item {
+    background: #f7f8fc;
+    border: 1.5px solid #e8eaf2;
+    border-radius: 12px;
+    padding: 12px 8px 10px;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .input-item:focus-within {
+    border-color: #1428a0;
+    background: #f0f3ff;
+  }
+
+  .input-item label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    color: #aaaaaa;
+    letter-spacing: 0.3px;
+    margin-bottom: 7px;
+  }
+
+  .input-item input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    font-weight: 800;
+    text-align: center;
+    color: #111111;
+    outline: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .input-item input::-webkit-outer-spin-button,
+  .input-item input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
+
+  .input-item input::placeholder { color: #d0d4e8; }
+
+  .input-item .unit {
+    font-size: 10px;
+    color: #bbbbbb;
+    margin-top: 4px;
+  }
+
+  /* 버튼 */
+  .btn {
+    width: 100%;
+    padding: 15px;
+    background: #1428a0;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    letter-spacing: -0.3px;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn:hover { background: #0f1f80; }
+  .btn:active { transform: scale(0.98); background: #0c1a6b; }
+
+  /* 결과 */
+  .result {
+    margin-top: 16px;
+    border-radius: 14px;
+    padding: 18px 16px;
+    display: none;
+  }
+
+  .result.ok {
+    display: block;
+    background: #f0faf4;
+    border: 1.5px solid #86efac;
+  }
+
+  .result.ng {
+    display: block;
+    background: #fff5f5;
+    border: 1.5px solid #fca5a5;
+  }
+
+  .result.warn {
+    display: block;
+    background: #fffbeb;
+    border: 1.5px solid #fcd34d;
+  }
+
+  .result-title {
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+
+  .result.ok .result-title  { color: #15803d; }
+  .result.ng .result-title  { color: #b91c1c; }
+  .result.warn .result-title { color: #b45309; }
+
+  /* 수치 행 */
+  .dim-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .dim-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.03);
+    border-radius: 8px;
+    padding: 9px 12px;
+  }
+
+  .dim-row .label {
+    font-size: 12px;
+    color: #666666;
+    font-weight: 600;
+  }
+
+  .dim-row .val {
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .val-ok   { color: #16a34a; }
+  .val-warn { color: #d97706; }
+  .val-ng   { color: #dc2626; }
+
+  /* 구분선 */
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(0,0,0,0.07);
+    margin: 12px 0;
+  }
+
+  /* 팁 */
+  .tip {
+    font-size: 12px;
+    color: #666666;
+    line-height: 1.8;
+  }
+
+  .tip strong { color: #1428a0; }
+
+  .tip .cta {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 9px 18px;
+    background: #1428a0;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    letter-spacing: -0.2px;
+  }
+
+  /* 안내 */
+  .notice {
+    font-size: 10px;
+    color: #cccccc;
+    text-align: center;
+    margin-top: 18px;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- 헤더 -->
+  <div class="header">
+    <div class="eyebrow">Installation Check</div>
+    <h2>우리 집 공간에<br>설치가 가능할까요?</h2>
+    <p>설치 공간 크기를 입력하면 바로 확인해드립니다</p>
+  </div>
+
+  <!-- 제품 스펙 -->
+  <div class="spec-card">
+    <!--
+      상품 이미지 URL을 아래 src에 넣으세요.
+      예: src="https://shop-phinf.pstatic.net/.../상품이미지.jpg"
+      이미지가 없으면 파란 아이콘으로 자동 대체됩니다.
+    -->
+    <img
+      class="spec-img"
+      id="productImg"
+      src="https://shop-phinf.pstatic.net/20260408_77/1775633204774XPXnv_JPEG/90641698798979605_209599727.jpg?type=m1000_pd"
+      alt="비스포크 AI콤보"
+      onerror="this.style.display='none'; document.getElementById('productImgFallback').style.display='flex';"
+    >
+    <div class="spec-img-placeholder" id="productImgFallback" style="display:none;">🫧</div>
+
+    <div class="spec-info">
+      <div class="model">비스포크 AI콤보 WD80H25BHY</div>
+      <div class="dims">
+        제품 크기<br>
+        <strong>가로 68.6 × 깊이 87.5 × 높이 111 cm</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- 입력 -->
+  <div class="section-label">설치 공간 입력</div>
+  <div class="input-group">
+    <div class="input-item">
+      <label>가로 (폭)</label>
+      <input type="number" id="w" placeholder="0" min="0" max="500">
+      <div class="unit">cm</div>
+    </div>
+    <div class="input-item">
+      <label>깊이 (안쪽)</label>
+      <input type="number" id="d" placeholder="0" min="0" max="500">
+      <div class="unit">cm</div>
+    </div>
+    <div class="input-item">
+      <label>높이</label>
+      <input type="number" id="h" placeholder="0" min="0" max="500">
+      <div class="unit">cm</div>
+    </div>
+  </div>
+
+  <button class="btn" onclick="check()">설치 가능 여부 확인하기</button>
+
+  <!-- 결과 -->
+  <div class="result" id="result"></div>
+
+  <div class="notice">
+    ※ 실제 설치 가능 여부는 현장 환경(문 위치, 배관 방향 등)에 따라 달라질 수 있습니다.<br>
+    정확한 확인은 설치 기사 방문 시 진행됩니다.
+  </div>
+
+</div>
+
+<script>
+const PRODUCT = { w: 68.6, d: 87.5, h: 111.0 };
+const CLEAR   = { w: 5, d: 5, h: 5 };
+const MIN     = {
+  w: PRODUCT.w + CLEAR.w,
+  d: PRODUCT.d + CLEAR.d,
+  h: PRODUCT.h + CLEAR.h
+};
+
+// 이미지 로드 확인 — URL이 기본값이면 바로 fallback 표시
+window.addEventListener('DOMContentLoaded', () => {
+  const img = document.getElementById('productImg');
+  if (img.src.includes('PRODUCT_IMAGE_URL_HERE')) {
+    img.style.display = 'none';
+    document.getElementById('productImgFallback').style.display = 'flex';
+  }
+});
+
+function check() {
+  const w = parseFloat(document.getElementById('w').value);
+  const d = parseFloat(document.getElementById('d').value);
+  const h = parseFloat(document.getElementById('h').value);
+
+  if (!w || !d || !h || w <= 0 || d <= 0 || h <= 0) {
+    alert('세 항목 모두 입력해주세요.');
+    return;
+  }
+
+  const wOk = w >= MIN.w;
+  const dOk = d >= MIN.d;
+  const hOk = h >= MIN.h;
+
+  const wGap = w - PRODUCT.w;
+  const dGap = d - PRODUCT.d;
+  const hGap = h - PRODUCT.h;
+
+  const allOk   = wOk && dOk && hOk;
+  const wWarn   = wOk && w < MIN.w + 5;
+  const dWarn   = dOk && d < MIN.d + 5;
+  const hWarn   = hOk && h < MIN.h + 5;
+  const hasWarn = (wWarn || dWarn || hWarn) && allOk;
+
+  function valClass(ok, warn) {
+    if (!ok)  return 'val-ng';
+    if (warn) return 'val-warn';
+    return 'val-ok';
+  }
+
+  function gapLabel(gap, ok, warn) {
+    if (!ok)  return `${Math.abs(gap).toFixed(1)}cm 부족`;
+    if (warn) return `+${gap.toFixed(1)}cm (여유 적음)`;
+    return `+${gap.toFixed(1)}cm`;
+  }
+
+  const dims = [
+    { label: '가로 여유', gap: wGap, ok: wOk, warn: wWarn },
+    { label: '깊이 여유', gap: dGap, ok: dOk, warn: dWarn },
+    { label: '높이 여유', gap: hGap, ok: hOk, warn: hWarn },
+  ];
+
+  const rowsHtml = dims.map(d => `
+    <div class="dim-row">
+      <span class="label">${d.label}</span>
+      <span class="val ${valClass(d.ok, d.warn)}">${gapLabel(d.gap, d.ok, d.warn)}</span>
+    </div>
+  `).join('');
+
+  const resultEl = document.getElementById('result');
+  let cls = '', title = '', tip = '';
+
+  if (allOk && !hasWarn) {
+    cls   = 'result ok';
+    title = '✅ 설치 가능합니다';
+    tip   = `공간이 충분합니다.<br>전면 도어 개폐를 위해 제품 앞쪽으로 <strong>최소 50cm</strong> 공간도 확보해주세요.`;
+  } else if (allOk && hasWarn) {
+    cls   = 'result warn';
+    title = '⚠️ 설치 가능 · 공간이 빠듯해요';
+    tip   = `여유 공간이 5cm 이하인 항목이 있습니다.<br><strong>설치 기사님과 현장 확인</strong>을 권장드립니다.`;
+  } else {
+    const ngItems = dims.filter(d => !d.ok).map(d => d.label.replace(' 여유', '')).join(', ');
+    cls   = 'result ng';
+    title = '❌ 설치가 어려울 수 있습니다';
+    tip   = `<strong>${ngItems}</strong> 공간이 제품 규격보다 작습니다.<br><br>` +
+            `더 작은 용량의 모델도 안내해드릴 수 있으니<br>` +
+            `<a class="cta" href="https://talk.naver.com/ct/wc58by" target="_blank">📞 톡톡으로 문의하기</a>`;
+  }
+
+  resultEl.className = cls;
+  resultEl.innerHTML = `
+    <div class="result-title">${title}</div>
+    <div class="dim-rows">${rowsHtml}</div>
+    <hr class="divider">
+    <div class="tip">${tip}</div>
+  `;
+}
+
+document.querySelectorAll('input').forEach(el => {
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+});
+</script>
+</body>
+</html>
