@@ -412,26 +412,31 @@
 <script>
 const CLEAR = { w: 5, d: 5, h: 5 };
 let PRODUCT = null;
-let allProducts = [];
 
-// products.json 로드
-fetch('products.json')
-  .then(r => r.json())
-  .then(data => {
-    allProducts = data;
-    const sel = document.getElementById('productSelect');
-    data.forEach((p, i) => {
-      const opt = document.createElement('option');
-      opt.value = i;
-      opt.textContent = p.name;
-      sel.appendChild(opt);
-    });
-    document.getElementById('loadingMsg').style.display = 'none';
-    sel.style.display = 'block';
-  })
-  .catch(() => {
-    document.getElementById('loadingMsg').textContent = '상품 목록을 불러올 수 없습니다.';
+const allProducts = [
+  { name: "비스포크 AI콤보 WD80H25BHY (세탁25kg+건조18kg)", url: "https://smartstore.naver.com/hanaro8118/products/13135789727", img: "https://shop-phinf.pstatic.net/20260408_77/1775633204774XPXnv_JPEG/90641698798979605_209599727.jpg?type=o1000", w: 68.6, h: 111.0, d: 87.5 },
+  { name: "비스포크AI WF80H2422ACHS (세탁24kg+건조22kg)", url: "https://smartstore.naver.com/hanaro8118/products/13313410333", img: "https://shop-phinf.pstatic.net/20260327_76/1774589848943AiWfR_JPEG/3670503077888604_1821400800.jpg?type=o1000", w: 68.6, h: 98.4, d: 87.5 },
+  { name: "비스포크 AI 세탁건조기 세트 WF25CB8895BV+DV20CB8890BV (세탁25kg+건조20kg)", url: "https://smartstore.naver.com/hanaro8118/products/11614984250", img: "https://shop-phinf.pstatic.net/20250702_171/1751437779405baRMP_JPEG/4316370647161781_340232323.jpg?type=o1000", w: 68.6, h: 98.4, d: 87.5 },
+  { name: "AI 세탁건조기 세트 WF25DG8650BV+DV21DG8600BV (세탁25kg+건조21kg)", url: "https://smartstore.naver.com/hanaro8118/products/11466066984", img: "https://shop-phinf.pstatic.net/20250304_195/174107446059260owa_JPEG/26031045613679705_1356143287.jpg?type=o1000", w: 68.6, h: 98.4, d: 87.5 },
+  { name: "비스포크AI 세탁기 WF80H24BDW (24kg)", url: "https://smartstore.naver.com/hanaro8118/products/13104539128", img: "https://shop-phinf.pstatic.net/20260304_69/17726067807448FGjz_JPEG/8785422526364171_380104572.jpg?type=o1000", w: 68.6, h: 98.4, d: 87.5 },
+  { name: "비스포크AI 건조기 DV80H22DDW (22kg)", url: "https://smartstore.naver.com/hanaro8118/products/13104596140", img: "https://shop-phinf.pstatic.net/20260304_216/1772606707346884uR_JPEG/8785349136253490_2118073621.jpg?type=o1000", w: 68.6, h: 98.4, d: 87.2 },
+  { name: "비스포크 AI 세탁기 WF25CB8895BV (25kg)", url: "https://smartstore.naver.com/hanaro8118/products/12209132192", img: "https://shop-phinf.pstatic.net/20250702_75/1751437938289Xmal4_JPEG/65766043172076951_184528373.jpg?type=o1000", w: 68.6, h: 98.4, d: 87.5 },
+  { name: "비스포크 AI 건조기 DV20CB8890BV (20kg)", url: "https://smartstore.naver.com/hanaro8118/products/12716065336", img: "https://shop-phinf.pstatic.net/20250702_176/1751438011780UMfvU_JPEG/85570852990657903_1747995815.jpg?type=o1000", w: 68.6, h: 98.4, d: 87.2 },
+  { name: "AI 세탁기 WF25DG8650BV (25kg)", url: "https://smartstore.naver.com/hanaro8118/products/11465763788", img: "https://shop-phinf.pstatic.net/20250217_290/1739779804903HcKro_JPEG/73912623513118426_1100971783.jpg?type=o1000", w: 68.6, h: 98.4, d: 87.5 },
+];
+
+// 드롭다운 초기화
+(function() {
+  const sel = document.getElementById('productSelect');
+  allProducts.forEach((p, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = p.name;
+    sel.appendChild(opt);
   });
+  document.getElementById('loadingMsg').style.display = 'none';
+  sel.style.display = 'block';
+})();
 
 function onProductChange() {
   const idx = document.getElementById('productSelect').value;
