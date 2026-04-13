@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>설치 공간 확인 — 비스포크 AI콤보 WD80H25BHY</title>
+<title>설치 공간 확인</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -50,53 +50,95 @@
     line-height: 1.6;
   }
 
+  /* 상품 선택 */
+  .product-select-wrap {
+    margin-bottom: 18px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #aaaaaa;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .product-select {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid #e8eaf2;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #111;
+    background: #f7f8fc;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231428a0' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    transition: border-color 0.2s;
+  }
+
+  .product-select:focus { border-color: #1428a0; background-color: #f0f3ff; }
+
+  /* 로딩 상태 */
+  .loading {
+    text-align: center;
+    padding: 20px;
+    font-size: 13px;
+    color: #aaa;
+  }
+
   /* 제품 스펙 */
   .spec-card {
     background: #f7f8fc;
     border: 1px solid #e8eaf2;
-    border-radius: 14px;
-    padding: 14px 16px;
+    border-radius: 16px;
+    padding: 24px 28px;
     margin-bottom: 22px;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 24px;
   }
 
   .spec-img {
-    width: 68px;
-    height: 68px;
-    border-radius: 10px;
+    width: 140px;
+    height: 140px;
+    border-radius: 12px;
     object-fit: contain;
     background: #fff;
     border: 1px solid #e8eaf2;
     flex-shrink: 0;
-    padding: 4px;
+    padding: 8px;
   }
 
   .spec-img-placeholder {
-    width: 68px;
-    height: 68px;
-    border-radius: 10px;
+    width: 140px;
+    height: 140px;
+    border-radius: 12px;
     background: linear-gradient(135deg, #1428a0 0%, #4a7eff 100%);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 56px;
     flex-shrink: 0;
   }
 
   .spec-info .model {
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 800;
     color: #111;
-    margin-bottom: 5px;
-    letter-spacing: -0.2px;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
   }
 
   .spec-info .dims {
-    font-size: 11px;
+    font-size: 14px;
     color: #888;
-    line-height: 1.7;
+    line-height: 1.8;
   }
 
   .spec-info .dims strong {
@@ -104,16 +146,18 @@
     font-weight: 700;
   }
 
-  /* 입력 섹션 */
-  .section-label {
+  .spec-info .product-link {
+    display: inline-block;
+    margin-top: 8px;
     font-size: 11px;
-    font-weight: 700;
-    color: #aaaaaa;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 12px;
+    color: #1428a0;
+    text-decoration: none;
+    font-weight: 600;
   }
 
+  .spec-info .product-link:hover { text-decoration: underline; }
+
+  /* 입력 섹션 */
   .input-group {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -187,6 +231,7 @@
 
   .btn:hover { background: #0f1f80; }
   .btn:active { transform: scale(0.98); background: #0c1a6b; }
+  .btn:disabled { background: #ccc; cursor: not-allowed; }
 
   /* 결과 */
   .result {
@@ -225,7 +270,6 @@
   .result.ng .result-title  { color: #b91c1c; }
   .result.warn .result-title { color: #b45309; }
 
-  /* 수치 행 */
   .dim-rows {
     display: flex;
     flex-direction: column;
@@ -242,37 +286,21 @@
     padding: 9px 12px;
   }
 
-  .dim-row .label {
-    font-size: 12px;
-    color: #666666;
-    font-weight: 600;
-  }
-
-  .dim-row .val {
-    font-size: 13px;
-    font-weight: 800;
-  }
+  .dim-row .label { font-size: 12px; color: #666666; font-weight: 600; }
+  .dim-row .val   { font-size: 13px; font-weight: 800; }
 
   .val-ok   { color: #16a34a; }
   .val-warn { color: #d97706; }
   .val-ng   { color: #dc2626; }
 
-  /* 구분선 */
   .divider {
     border: none;
     border-top: 1px solid rgba(0,0,0,0.07);
     margin: 12px 0;
   }
 
-  /* 팁 */
-  .tip {
-    font-size: 12px;
-    color: #666666;
-    line-height: 1.8;
-  }
-
+  .tip { font-size: 12px; color: #666666; line-height: 1.8; }
   .tip strong { color: #1428a0; }
-
   .tip .cta {
     display: inline-block;
     margin-top: 10px;
@@ -283,16 +311,26 @@
     font-size: 12px;
     font-weight: 800;
     text-decoration: none;
-    letter-spacing: -0.2px;
   }
 
-  /* 안내 */
   .notice {
     font-size: 10px;
     color: #cccccc;
     text-align: center;
     margin-top: 18px;
     line-height: 1.8;
+  }
+
+  /* 치수 없는 상품 안내 */
+  .no-dims {
+    background: #fff8e1;
+    border: 1px solid #fcd34d;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #92400e;
+    margin-bottom: 16px;
+    display: none;
   }
 </style>
 </head>
@@ -304,55 +342,62 @@
   <div class="header">
     <div class="eyebrow">Installation Check</div>
     <h2>우리 집 공간에<br>설치가 가능할까요?</h2>
-    <p>설치 공간 크기를 입력하면 바로 확인해드립니다</p>
+    <p>확인할 상품을 선택하고 설치 공간 크기를 입력해주세요</p>
   </div>
 
-  <!-- 제품 스펙 -->
-  <div class="spec-card">
-    <!--
-      상품 이미지 URL을 아래 src에 넣으세요.
-      예: src="https://shop-phinf.pstatic.net/.../상품이미지.jpg"
-      이미지가 없으면 파란 아이콘으로 자동 대체됩니다.
-    -->
+  <!-- 상품 선택 -->
+  <div class="product-select-wrap">
+    <div class="section-label">상품 선택</div>
+    <div class="loading" id="loadingMsg">상품 목록 불러오는 중...</div>
+    <select class="product-select" id="productSelect" style="display:none" onchange="onProductChange()">
+      <option value="">— 상품을 선택해주세요 —</option>
+    </select>
+  </div>
+
+  <!-- 제품 스펙 (선택 후 표시) -->
+  <div class="spec-card" id="specCard" style="display:none">
     <img
       class="spec-img"
       id="productImg"
-      src="https://shop-phinf.pstatic.net/20260408_77/1775633204774XPXnv_JPEG/90641698798979605_209599727.jpg?type=m1000_pd"
-      alt="비스포크 AI콤보"
+      src=""
+      alt="상품 이미지"
       onerror="this.style.display='none'; document.getElementById('productImgFallback').style.display='flex';"
     >
-    <div class="spec-img-placeholder" id="productImgFallback" style="display:none;">🫧</div>
-
+    <div class="spec-img-placeholder" id="productImgFallback">🫧</div>
     <div class="spec-info">
-      <div class="model">비스포크 AI콤보 WD80H25BHY</div>
-      <div class="dims">
-        제품 크기<br>
-        <strong>가로 68.6 × 깊이 87.5 × 높이 111 cm</strong>
-      </div>
+      <div class="model" id="specName">—</div>
+      <div class="dims" id="specDims">—</div>
+      <a class="product-link" id="specLink" href="#" target="_blank">↗ 상품 페이지 바로가기</a>
     </div>
+  </div>
+
+  <!-- 치수 없는 상품 -->
+  <div class="no-dims" id="noDimsMsg">
+    ⚠️ 이 상품은 치수 정보가 없어 자동 확인이 어렵습니다. 톡톡으로 문의해주세요.
   </div>
 
   <!-- 입력 -->
-  <div class="section-label">설치 공간 입력</div>
-  <div class="input-group">
-    <div class="input-item">
-      <label>가로 (폭)</label>
-      <input type="number" id="w" placeholder="0" min="0" max="500">
-      <div class="unit">cm</div>
+  <div id="inputSection" style="display:none">
+    <div class="section-label" style="margin-bottom:12px">설치 공간 입력</div>
+    <div class="input-group">
+      <div class="input-item">
+        <label>가로 (폭)</label>
+        <input type="number" id="iw" placeholder="0" min="0" max="500">
+        <div class="unit">cm</div>
+      </div>
+      <div class="input-item">
+        <label>깊이 (안쪽)</label>
+        <input type="number" id="id" placeholder="0" min="0" max="500">
+        <div class="unit">cm</div>
+      </div>
+      <div class="input-item">
+        <label>높이</label>
+        <input type="number" id="ih" placeholder="0" min="0" max="500">
+        <div class="unit">cm</div>
+      </div>
     </div>
-    <div class="input-item">
-      <label>깊이 (안쪽)</label>
-      <input type="number" id="d" placeholder="0" min="0" max="500">
-      <div class="unit">cm</div>
-    </div>
-    <div class="input-item">
-      <label>높이</label>
-      <input type="number" id="h" placeholder="0" min="0" max="500">
-      <div class="unit">cm</div>
-    </div>
+    <button class="btn" onclick="check()">설치 가능 여부 확인하기</button>
   </div>
-
-  <button class="btn" onclick="check()">설치 가능 여부 확인하기</button>
 
   <!-- 결과 -->
   <div class="result" id="result"></div>
@@ -365,32 +410,100 @@
 </div>
 
 <script>
-const PRODUCT = { w: 68.6, d: 87.5, h: 111.0 };
-const CLEAR   = { w: 5, d: 5, h: 5 };
-const MIN     = {
-  w: PRODUCT.w + CLEAR.w,
-  d: PRODUCT.d + CLEAR.d,
-  h: PRODUCT.h + CLEAR.h
-};
+const CLEAR = { w: 5, d: 5, h: 5 };
+let PRODUCT = null;
+let allProducts = [];
 
-// 이미지 로드 확인 — URL이 기본값이면 바로 fallback 표시
-window.addEventListener('DOMContentLoaded', () => {
-  const img = document.getElementById('productImg');
-  if (img.src.includes('PRODUCT_IMAGE_URL_HERE')) {
-    img.style.display = 'none';
-    document.getElementById('productImgFallback').style.display = 'flex';
+// products.json 로드
+fetch('products.json')
+  .then(r => r.json())
+  .then(data => {
+    allProducts = data;
+    const sel = document.getElementById('productSelect');
+    data.forEach((p, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = p.name;
+      sel.appendChild(opt);
+    });
+    document.getElementById('loadingMsg').style.display = 'none';
+    sel.style.display = 'block';
+  })
+  .catch(() => {
+    document.getElementById('loadingMsg').textContent = '상품 목록을 불러올 수 없습니다.';
+  });
+
+function onProductChange() {
+  const idx = document.getElementById('productSelect').value;
+  const specCard    = document.getElementById('specCard');
+  const inputSection = document.getElementById('inputSection');
+  const noDimsMsg   = document.getElementById('noDimsMsg');
+  const resultEl    = document.getElementById('result');
+
+  // 초기화
+  resultEl.className = 'result';
+  resultEl.innerHTML = '';
+  document.getElementById('iw').value = '';
+  document.getElementById('id').value = '';
+  document.getElementById('ih').value = '';
+
+  if (idx === '') {
+    specCard.style.display = 'none';
+    inputSection.style.display = 'none';
+    noDimsMsg.style.display = 'none';
+    PRODUCT = null;
+    return;
   }
-});
+
+  const p = allProducts[idx];
+  PRODUCT = p;
+
+  // 스펙 카드 업데이트
+  const img = document.getElementById('productImg');
+  const fallback = document.getElementById('productImgFallback');
+  if (p.img) {
+    img.src = p.img;
+    img.style.display = 'block';
+    fallback.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    fallback.style.display = 'flex';
+  }
+
+  document.getElementById('specName').textContent = p.name;
+  document.getElementById('specLink').href = p.url;
+
+  if (p.w && p.h && p.d) {
+    document.getElementById('specDims').innerHTML =
+      `제품 크기<br><strong>가로 ${p.w} × 깊이 ${p.d} × 높이 ${p.h} cm</strong>`;
+    specCard.style.display = 'flex';
+    inputSection.style.display = 'block';
+    noDimsMsg.style.display = 'none';
+  } else {
+    document.getElementById('specDims').textContent = '치수 정보 없음';
+    specCard.style.display = 'flex';
+    inputSection.style.display = 'none';
+    noDimsMsg.style.display = 'block';
+  }
+}
 
 function check() {
-  const w = parseFloat(document.getElementById('w').value);
-  const d = parseFloat(document.getElementById('d').value);
-  const h = parseFloat(document.getElementById('h').value);
+  if (!PRODUCT || !PRODUCT.w) return;
+
+  const w = parseFloat(document.getElementById('iw').value);
+  const d = parseFloat(document.getElementById('id').value);
+  const h = parseFloat(document.getElementById('ih').value);
 
   if (!w || !d || !h || w <= 0 || d <= 0 || h <= 0) {
     alert('세 항목 모두 입력해주세요.');
     return;
   }
+
+  const MIN = {
+    w: PRODUCT.w + CLEAR.w,
+    d: PRODUCT.d + CLEAR.d,
+    h: PRODUCT.h + CLEAR.h,
+  };
 
   const wOk = w >= MIN.w;
   const dOk = d >= MIN.d;
