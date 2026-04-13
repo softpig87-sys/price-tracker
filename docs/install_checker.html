@@ -354,20 +354,21 @@
     </select>
   </div>
 
-  <!-- 제품 스펙 (선택 후 표시) -->
-  <div class="spec-card" id="specCard" style="display:none">
+  <!-- 제품 스펙 -->
+  <div class="spec-card" id="specCard">
     <img
       class="spec-img"
       id="productImg"
       src=""
       alt="상품 이미지"
       onerror="this.style.display='none'; document.getElementById('productImgFallback').style.display='flex';"
+      style="display:none"
     >
     <div class="spec-img-placeholder" id="productImgFallback">🫧</div>
     <div class="spec-info">
-      <div class="model" id="specName">—</div>
-      <div class="dims" id="specDims">—</div>
-      <a class="product-link" id="specLink" href="#" target="_blank">↗ 상품 페이지 바로가기</a>
+      <div class="model" id="specName" style="color:#ccc">상품을 선택해주세요</div>
+      <div class="dims" id="specDims" style="color:#ccc">제품 크기<br><span style="color:#ddd">— × — × — cm</span></div>
+      <a class="product-link" id="specLink" href="#" target="_blank" style="visibility:hidden">↗ 상품 페이지 바로가기</a>
     </div>
   </div>
 
@@ -377,7 +378,7 @@
   </div>
 
   <!-- 입력 -->
-  <div id="inputSection" style="display:none">
+  <div id="inputSection">
     <div class="section-label" style="margin-bottom:12px">설치 공간 입력</div>
     <div class="input-group">
       <div class="input-item">
@@ -396,7 +397,7 @@
         <div class="unit">cm</div>
       </div>
     </div>
-    <button class="btn" onclick="check()">설치 가능 여부 확인하기</button>
+    <button class="btn" onclick="check()" disabled>설치 가능 여부 확인하기</button>
   </div>
 
   <!-- 결과 -->
@@ -453,8 +454,13 @@ function onProductChange() {
   document.getElementById('ih').value = '';
 
   if (idx === '') {
-    specCard.style.display = 'none';
-    inputSection.style.display = 'none';
+    document.getElementById('productImg').style.display = 'none';
+    document.getElementById('productImgFallback').style.display = 'flex';
+    document.getElementById('specName').textContent = '상품을 선택해주세요';
+    document.getElementById('specName').style.color = '#ccc';
+    document.getElementById('specDims').innerHTML = '제품 크기<br><span style="color:#ddd">— × — × — cm</span>';
+    document.getElementById('specLink').style.visibility = 'hidden';
+    document.querySelector('.btn').disabled = true;
     noDimsMsg.style.display = 'none';
     PRODUCT = null;
     return;
@@ -475,19 +481,20 @@ function onProductChange() {
     fallback.style.display = 'flex';
   }
 
-  document.getElementById('specName').textContent = p.name;
+  const specName = document.getElementById('specName');
+  specName.textContent = p.name;
+  specName.style.color = '';
   document.getElementById('specLink').href = p.url;
+  document.getElementById('specLink').style.visibility = 'visible';
 
   if (p.w && p.h && p.d) {
     document.getElementById('specDims').innerHTML =
       `제품 크기<br><strong>가로 ${p.w} × 깊이 ${p.d} × 높이 ${p.h} cm</strong>`;
-    specCard.style.display = 'flex';
-    inputSection.style.display = 'block';
+    document.querySelector('.btn').disabled = false;
     noDimsMsg.style.display = 'none';
   } else {
     document.getElementById('specDims').textContent = '치수 정보 없음';
-    specCard.style.display = 'flex';
-    inputSection.style.display = 'none';
+    document.querySelector('.btn').disabled = true;
     noDimsMsg.style.display = 'block';
   }
 }
